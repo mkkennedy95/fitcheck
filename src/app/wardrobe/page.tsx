@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import ClothingCard from "@/components/ClothingCard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import type { ClothingItem } from "@/lib/types";
 
-// Placeholder clothing items — these will come from the database later
+// Placeholder clothing items — these will come from the database in Phase 3
 const placeholderItems: ClothingItem[] = [
   {
     id: "1",
@@ -84,52 +87,54 @@ const placeholderItems: ClothingItem[] = [
   },
 ];
 
-// My Wardrobe page — shows all clothing items in a grid
+// My Wardrobe page — protected, shows all clothing items in a grid
 export default function WardrobePage() {
   const items = placeholderItems;
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-navy">My Wardrobe</h1>
-          <p className="mt-1 text-sm text-gray-dark">
-            {items.length} items in your collection
-          </p>
+    <ProtectedRoute>
+      <div className="space-y-6">
+        {/* Page header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-navy">My Wardrobe</h1>
+            <p className="mt-1 text-sm text-gray-dark">
+              {items.length} items in your collection
+            </p>
+          </div>
+          <Link
+            href="/wardrobe/add"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+          >
+            + Add Item
+          </Link>
         </div>
-        <Link
-          href="/wardrobe/add"
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-        >
-          + Add Item
-        </Link>
-      </div>
 
-      {/* Filter tabs (non-functional for now — just UI) */}
-      <div className="flex gap-2 overflow-x-auto">
-        {["All", "Tops", "Bottoms", "Shoes", "Outerwear", "Accessories"].map(
-          (tab) => (
-            <button
-              key={tab}
-              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-                tab === "All"
-                  ? "bg-navy text-white"
-                  : "bg-white text-gray-dark hover:bg-gray-100"
-              }`}
-            >
-              {tab}
-            </button>
-          )
-        )}
-      </div>
+        {/* Filter tabs (non-functional for now — just UI) */}
+        <div className="flex gap-2 overflow-x-auto">
+          {["All", "Tops", "Bottoms", "Shoes", "Outerwear", "Accessories"].map(
+            (tab) => (
+              <button
+                key={tab}
+                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                  tab === "All"
+                    ? "bg-navy text-white"
+                    : "bg-white text-gray-dark hover:bg-gray-100"
+                }`}
+              >
+                {tab}
+              </button>
+            )
+          )}
+        </div>
 
-      {/* Clothing items grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {items.map((item) => (
-          <ClothingCard key={item.id} item={item} />
-        ))}
+        {/* Clothing items grid */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {items.map((item) => (
+            <ClothingCard key={item.id} item={item} />
+          ))}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import OutfitCard from "@/components/OutfitCard";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import type { ClothingItem, OutfitRecommendation } from "@/lib/types";
 
 // Activity options for the dropdown
@@ -82,6 +83,7 @@ export default function OutfitPage() {
   const [showResults, setShowResults] = useState(false);
 
   return (
+    <ProtectedRoute>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-navy">Get Outfit Picks</h1>
@@ -215,5 +217,6 @@ export default function OutfitPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

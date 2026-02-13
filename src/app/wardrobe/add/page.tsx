@@ -5,6 +5,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import type { Category, Formality, Season } from "@/lib/types";
 
 // Options for each dropdown / selector
@@ -71,6 +72,7 @@ export default function AddItemPage() {
   };
 
   return (
+    <ProtectedRoute>
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Page header with back link */}
       <div>
@@ -232,5 +234,6 @@ export default function AddItemPage() {
         </button>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
