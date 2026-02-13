@@ -1,12 +1,19 @@
 "use client";
 
-// Get Outfit page — users select an activity and get AI outfit recommendations
-// "use client" is needed for interactive form elements
+// Get Outfit page — users select an activity, see real weather,
+// and get AI outfit recommendations from their wardrobe.
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import OutfitCard from "@/components/OutfitCard";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import type { ClothingItem, OutfitRecommendation } from "@/lib/types";
+import WeatherWidget from "@/components/WeatherWidget";
+import { useAuth } from "@/components/AuthProvider";
+import { createClient } from "@/lib/supabase";
+import type {
+  ClothingItem,
+  OutfitRecommendation,
+  WeatherData,
+} from "@/lib/types";
 
 // Activity options for the dropdown
 const activities = [
@@ -18,69 +25,79 @@ const activities = [
   { value: "special_event", label: "Special Event" },
 ];
 
-// Placeholder items — same as wardrobe page, will be fetched from DB later
-const placeholderItems: Record<string, ClothingItem> = {
-  "1": {
-    id: "1",
-    user_id: "demo",
-    name: "Navy Oxford Shirt",
-    category: "tops",
-    color: "Navy",
-    formality: "business_casual",
-    seasons: ["spring", "fall", "winter"],
-    image_url: null,
-    cloudinary_public_id: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  "3": {
-    id: "3",
-    user_id: "demo",
-    name: "Dark Wash Jeans",
-    category: "bottoms",
-    color: "Indigo",
-    formality: "smart_casual",
-    seasons: ["all-season"],
-    image_url: null,
-    cloudinary_public_id: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  "5": {
-    id: "5",
-    user_id: "demo",
-    name: "White Sneakers",
-    category: "shoes",
-    color: "White",
-    formality: "casual",
-    seasons: ["spring", "summer", "fall"],
-    image_url: null,
-    cloudinary_public_id: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-};
-
-// Placeholder outfit recommendations — will come from Claude API later
-const placeholderOutfits: OutfitRecommendation[] = [
-  {
-    name: "Smart Casual Friday",
-    items: ["1", "3", "5"],
-    why: "The navy shirt with dark jeans is a classic smart-casual combo. White sneakers keep it relaxed without being sloppy.",
-    confidence: "high",
-  },
-  {
-    name: "Weekend Ready",
-    items: ["1", "3"],
-    why: "Oxford shirt with jeans works for anything from brunch to a casual evening out.",
-    confidence: "medium",
-  },
-];
-
 export default function OutfitPage() {
+  const { user } = useAuth();
   const [activity, setActivity] = useState("casual_hangout");
   const [vibeNotes, setVibeNotes] = useState("");
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  // Real wardrobe items from Supabase
+  const [items, setItems] = useState<ClothingItem[]>([]);
+  const [itemsMap, setItemsMap] = useState<Record<string, ClothingItem>>({});
+  const [loadingItems, setLoadingItems] = useState(true);
+
+  // Recommendation state (placeholder for now — Claude AI comes in Phase 5)
+  const [outfits, setOutfits] = useState<OutfitRecommendation[]>([]);
+  const [wardrobeTip, setWardrobeTip] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+
+  // Fetch the user's wardrobe items
+  const fetchItems = useCallback(async () => {
+    if (!user) return;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("clothing_items")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (data) {
+      setItems(data as ClothingItem[]);
+      // Build a map of id -> item for quick lookup by OutfitCard
+      const map: Record<string, ClothingItem> = {};
+      for (const item of data) {
+        map[item.id] = item as ClothingItem;
+      }
+      setItemsMap(map);
+    }
+    setLoadingItems(false);
+  }, [user]);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  // Placeholder generate function — will call Claude API in Phase 5
+  const handleGenerate = () => {
+    if (items.length < 2) {
+      return; // Not enough items
+    }
+
+    // For now, generate a simple placeholder recommendation
+    // using the user's actual items
+    const tops = items.filter((i) => i.category === "tops");
+    const bottoms = items.filter((i) => i.category === "bottoms");
+    const shoes = items.filter((i) => i.category === "shoes");
+
+    const placeholderOutfits: OutfitRecommendation[] = [];
+
+    if (tops.length > 0 && bottoms.length > 0) {
+      const outfitItems = [tops[0].id, bottoms[0].id];
+      if (shoes.length > 0) outfitItems.push(shoes[0].id);
+
+      placeholderOutfits.push({
+        name: "Today's Pick",
+        items: outfitItems,
+        why: "AI-powered recommendations coming soon! This is a preview using your actual wardrobe items.",
+        confidence: "medium",
+      });
+    }
+
+    setOutfits(placeholderOutfits);
+    setWardrobeTip(
+      "Full AI outfit recommendations are coming in the next update!"
+    );
+    setShowResults(true);
+  };
 
   return (
     <ProtectedRoute>
@@ -96,26 +113,8 @@ export default function OutfitPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left column: Input form */}
         <div className="space-y-6">
-          {/* Weather widget placeholder */}
-          <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-medium text-gray-medium">
-              Current Weather
-            </h2>
-            <div className="mt-3 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent/10 text-2xl">
-                72°
-              </div>
-              <div>
-                <p className="font-semibold text-navy">Partly Cloudy</p>
-                <p className="text-sm text-gray-dark">
-                  Feels like 70° · Humidity 45%
-                </p>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-gray-medium">
-              Weather data will be live in a future update.
-            </p>
-          </div>
+          {/* Real weather widget */}
+          <WeatherWidget onWeatherLoaded={setWeather} />
 
           {/* Activity selector */}
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -157,10 +156,15 @@ export default function OutfitPage() {
             {/* Generate button */}
             <button
               type="button"
-              onClick={() => setShowResults(true)}
-              className="mt-4 w-full rounded-lg bg-accent px-4 py-3 font-medium text-white transition-colors hover:bg-accent-hover"
+              onClick={handleGenerate}
+              disabled={loadingItems || items.length < 2}
+              className="mt-4 w-full rounded-lg bg-accent px-4 py-3 font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
             >
-              Generate Outfits
+              {loadingItems
+                ? "Loading wardrobe..."
+                : items.length < 2
+                  ? "Add at least 2 items to your wardrobe first"
+                  : "Generate Outfits"}
             </button>
           </div>
         </div>
@@ -172,23 +176,22 @@ export default function OutfitPage() {
               <h2 className="text-lg font-semibold text-navy">
                 Your Outfit Picks
               </h2>
-              {placeholderOutfits.map((outfit, index) => (
+              {outfits.map((outfit, index) => (
                 <OutfitCard
                   key={index}
                   outfit={outfit}
-                  itemsMap={placeholderItems}
+                  itemsMap={itemsMap}
                 />
               ))}
               {/* Wardrobe tip */}
-              <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
-                <p className="text-sm font-medium text-accent">
-                  Wardrobe Tip
-                </p>
-                <p className="mt-1 text-sm text-gray-dark">
-                  A versatile gray crewneck sweater would give you more layering
-                  options for cooler days.
-                </p>
-              </div>
+              {wardrobeTip && (
+                <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
+                  <p className="text-sm font-medium text-accent">
+                    Wardrobe Tip
+                  </p>
+                  <p className="mt-1 text-sm text-gray-dark">{wardrobeTip}</p>
+                </div>
+              )}
             </>
           ) : (
             // Empty state before generating
