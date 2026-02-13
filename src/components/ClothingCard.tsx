@@ -20,11 +20,12 @@ const categoryColors: Record<string, string> = {
 
 interface ClothingCardProps {
   item: ClothingItem;
+  onDelete?: (id: string) => void;
 }
 
-export default function ClothingCard({ item }: ClothingCardProps) {
+export default function ClothingCard({ item, onDelete }: ClothingCardProps) {
   return (
-    <div className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
       {/* Image area */}
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         {item.image_url ? (
@@ -50,6 +51,34 @@ export default function ClothingCard({ item }: ClothingCardProps) {
               />
             </svg>
           </div>
+        )}
+
+        {/* Delete button — appears on hover in the top-right corner */}
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm("Delete this item?")) {
+                onDelete(item.id);
+              }
+            }}
+            className="absolute right-2 top-2 rounded-full bg-white/90 p-1.5 text-gray-500 opacity-0 shadow-sm transition-opacity hover:bg-error hover:text-white group-hover:opacity-100"
+            title="Delete item"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         )}
       </div>
 
