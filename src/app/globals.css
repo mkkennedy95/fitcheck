@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+/* FitCheck color palette */
+:root {
+  --background: #f8f9fa;
+  --foreground: #1a1a2e;
+  --navy: #1a1a2e;
+  --accent: #4361ee;
+  --accent-hover: #3a56d4;
+  --gray-light: #f0f0f5;
+  --gray-medium: #9ca3af;
+  --gray-dark: #4b5563;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-navy: var(--navy);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-gray-light: var(--gray-light);
+  --color-gray-medium: var(--gray-medium);
+  --color-gray-dark: var(--gray-dark);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
