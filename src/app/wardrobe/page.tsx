@@ -19,6 +19,7 @@ const filterTabs: { value: Category | "all"; label: string }[] = [
   { value: "shoes", label: "Shoes" },
   { value: "outerwear", label: "Outerwear" },
   { value: "accessories", label: "Accessories" },
+  { value: "pieces", label: "Pieces" },
 ];
 
 export default function WardrobePage() {
@@ -75,12 +76,20 @@ export default function WardrobePage() {
               collection
             </p>
           </div>
-          <Link
-            href="/wardrobe/add"
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-          >
-            + Add Item
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/wardrobe/batch"
+              className="rounded-lg border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-white"
+            >
+              Batch Upload
+            </Link>
+            <Link
+              href="/wardrobe/add"
+              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            >
+              + Add Item
+            </Link>
+          </div>
         </div>
 
         {/* Filter tabs */}

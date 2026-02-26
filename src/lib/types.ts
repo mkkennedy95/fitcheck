@@ -24,6 +24,7 @@ export interface ClothingItem {
   color: string;
   formality: Formality;
   seasons: Season[];
+  fit_rating?: number; // 1-5 scale for quality/fit
   image_url: string | null;
   cloudinary_public_id: string | null;
   created_at: string;
