@@ -78,6 +78,12 @@ export default function WardrobePage() {
           </div>
           <div className="flex gap-2">
             <Link
+              href="/wardrobe/worksheet"
+              className="rounded-lg border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-white"
+            >
+              Worksheet
+            </Link>
+            <Link
               href="/wardrobe/batch"
               className="rounded-lg border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-white"
             >
