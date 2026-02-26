@@ -24,6 +24,7 @@ const categories: { value: Category; label: string }[] = [
   { value: "shoes", label: "Shoes" },
   { value: "outerwear", label: "Outerwear" },
   { value: "accessories", label: "Accessories" },
+  { value: "pieces", label: "Pieces" },
 ];
 
 const formalityLevels: { value: Formality; label: string }[] = [
@@ -31,6 +32,7 @@ const formalityLevels: { value: Formality; label: string }[] = [
   { value: "smart_casual", label: "Smart Casual" },
   { value: "business_casual", label: "Business Casual" },
   { value: "formal", label: "Formal" },
+  { value: "gym", label: "Gym/Exercise" },
 ];
 
 const seasonOptions: { value: Season; label: string }[] = [
@@ -328,7 +330,7 @@ export default function AddItemPage() {
           <label className="mb-2 block text-sm font-medium text-navy">
             Formality Level
           </label>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {formalityLevels.map((level) => (
               <button
                 key={level.value}

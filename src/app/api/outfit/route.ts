@@ -47,31 +47,54 @@ export async function POST(req: NextRequest) {
       special_event: "Special Event",
     };
 
-    const prompt = `You are a personal stylist AI. The user wants outfit recommendations for: ${activityLabel[activity] ?? activity}.
+    const prompt = `You are an expert men's stylist with deep knowledge of fashion principles, color theory, and occasion-appropriate dressing. The user needs outfit recommendations for: ${activityLabel[activity] ?? activity}.
 
 ${weatherText}
 
 ${vibeNotes ? `User's vibe / style notes: "${vibeNotes}"` : ""}
 
-The user's wardrobe (use ONLY these exact item IDs in your recommendations):
+STYLING PRINCIPLES TO APPLY:
+- Color coordination: Use complementary colors (navy/brown, black/gray, olive/tan). Avoid clashing (black/brown shoes with navy suits, etc.). Neutrals (black, white, gray, navy, beige) are versatile bases.
+- Formality matching: All items in an outfit should match formality level. Don't mix formal dress shoes with gym shorts, or business blazers with athletic wear.
+- Occasion appropriateness:
+  * Work/Office: Business casual to formal. Button-downs, chinos/dress pants, leather shoes. Blazers add polish.
+  * Date Night: Smart casual to business casual. Well-fitted, intentional pieces. Avoid gym wear.
+  * Casual Hangout: Casual to smart casual. Comfortable but put-together. T-shirts, jeans, sneakers work.
+  * Gym: Athletic/gym formality only. Performance fabrics, athletic shoes, moisture-wicking.
+  * Outdoor/Active: Casual, weather-appropriate. Layers if cold, breathable if warm.
+  * Special Event: Business casual to formal. Dress up unless told otherwise.
+- Weather considerations:
+  * Cold (<50°F): Layer with outerwear (jackets, coats). Winter fabrics (wool, flannel).
+  * Mild (50-70°F): Light layers optional. Spring/fall fabrics.
+  * Warm (>70°F): Breathable, light fabrics. Short sleeves, lighter colors.
+  * Rain: Suggest outerwear if available.
+- Seasonal fabrics: Winter = wool, flannel, heavier knits. Summer = linen, cotton, lightweight. Spring/Fall = transitional.
+- Variety: Generate DIFFERENT outfit combinations. Don't repeat the same items across all recommendations. Explore the full wardrobe.
+
+The user's wardrobe (use ONLY these exact item IDs):
 ${wardrobeText}
 
-Generate 2-3 complete outfit recommendations. Each outfit must:
-1. Include items that work together stylistically and are appropriate for the activity and weather
-2. Use ONLY item IDs from the wardrobe list above — never invent IDs
-3. Include at least a top and bottom (or a one-piece equivalent); shoes are optional but preferred when available
+Generate 2-3 VARIED outfit recommendations. Requirements:
+1. Each outfit must be DIFFERENT — use different combinations of items, don't just repeat the same pieces
+2. Match formality levels within each outfit (all casual, all formal, etc.)
+3. Ensure color coordination (complementary or neutral palette)
+4. Consider the activity — gym outfits need gym formality items, work needs business casual+
+5. Factor in weather — layer appropriately for temperature
+6. Use ONLY item IDs from the wardrobe above — never invent IDs
+7. Include at least a top and bottom (or pieces like suits); add shoes/outerwear when appropriate
+8. Confidence: "high" if formality/colors/season perfectly match activity+weather. "medium" if mostly appropriate but minor compromises. "low" if significant mismatches but best available.
 
-Respond with valid JSON only — no markdown fences, no explanation outside the JSON. Use this exact schema:
+Respond with valid JSON only — no markdown fences, no explanation outside JSON. Use this exact schema:
 {
   "outfits": [
     {
       "name": "Short outfit name (3-5 words)",
-      "items": ["item-id-1", "item-id-2"],
-      "why": "1-2 sentences explaining why this outfit works for the occasion and weather",
+      "items": ["item-id-1", "item-id-2", "item-id-3"],
+      "why": "1-2 sentences explaining why this outfit works (mention color coordination, formality match, or weather appropriateness)",
       "confidence": "high" | "medium" | "low"
     }
   ],
-  "wardrobe_tip": "One actionable tip about their wardrobe (optional, can be null)"
+  "wardrobe_tip": "One specific, actionable tip about gaps in their wardrobe or versatile pieces they should add (optional, can be null)"
 }`;
 
     const message = await client.messages.create({
