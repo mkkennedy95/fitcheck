@@ -98,7 +98,7 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
 }`;
 
     const message = await client.messages.create({
-      model: "claude-opus-4-6",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       messages: [{ role: "user", content: prompt }],
     });
