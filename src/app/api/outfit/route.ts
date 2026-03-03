@@ -109,8 +109,18 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
       throw new Error("Unexpected response type from Claude");
     }
 
+    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+    let jsonText = content.text.trim();
+    if (jsonText.startsWith("```")) {
+      // Remove opening fence (```json or ```)
+      jsonText = jsonText.replace(/^```(?:json)?\n?/, "");
+      // Remove closing fence
+      jsonText = jsonText.replace(/\n?```$/, "");
+      jsonText = jsonText.trim();
+    }
+
     // Parse Claude's JSON response
-    const parsed = JSON.parse(content.text) as RecommendationResponse;
+    const parsed = JSON.parse(jsonText) as RecommendationResponse;
 
     // Validate that all returned item IDs actually exist in the wardrobe
     const validIds = new Set(items.map((i) => i.id));
