@@ -110,8 +110,7 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
     }
 
     console.log('RAW RESPONSE:', content.text);
-    const rawText = content.text;
-    const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+    const cleaned = content.text.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
     const parsed = JSON.parse(cleaned) as RecommendationResponse;
 
     // Validate that all returned item IDs actually exist in the wardrobe
