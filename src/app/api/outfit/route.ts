@@ -109,6 +109,7 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
       throw new Error("Unexpected response type from Claude");
     }
 
+    console.log('RAW RESPONSE:', content.text);
     const rawText = content.text;
     const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
     const parsed = JSON.parse(cleaned) as RecommendationResponse;
