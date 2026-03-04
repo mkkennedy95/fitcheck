@@ -54,7 +54,12 @@ ${weatherText}
 ${vibeNotes ? `User's vibe / style notes: "${vibeNotes}"` : ""}
 
 STYLING PRINCIPLES TO APPLY:
-- Color coordination: Use complementary colors (navy/brown, black/gray, olive/tan). Avoid clashing (black/brown shoes with navy suits, etc.). Neutrals (black, white, gray, navy, beige) are versatile bases.
+- Color coordination (STRICT RULES):
+  * NEVER pair same-color tops and bottoms (e.g., no black top with black bottom, no navy top with navy bottom)
+  * NEVER pair navy with black — these clash despite both being dark
+  * Each outfit should have ONE anchor neutral (black, white, gray, navy, beige, tan) and maximum ONE accent color
+  * Good pairings: navy/brown, black/gray, olive/tan, charcoal/burgundy, white/any color
+  * Avoid clashing: black/brown shoes with navy suits, brown belt with black shoes, etc.
 - Formality matching: All items in an outfit should match formality level. Don't mix formal dress shoes with gym shorts, or business blazers with athletic wear.
 - Occasion appropriateness:
   * Work/Office: Business casual to formal. Button-downs, chinos/dress pants, leather shoes. Blazers add polish.
