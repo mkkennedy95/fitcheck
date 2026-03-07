@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "build:ios": "next build && npx cap sync"
+    "build:ios": "npx cap sync"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
