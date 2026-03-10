@@ -26,7 +26,7 @@ const activities = [
 ];
 
 export default function OutfitPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activity, setActivity] = useState("casual_hangout");
   const [vibeNotes, setVibeNotes] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -45,43 +45,73 @@ export default function OutfitPage() {
 
   // Fetch the user's wardrobe items
   const fetchItems = useCallback(async () => {
-    if (!user) return;
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("clothing_items")
-      .select("*")
-      .eq("user_id", user.id);
-
-    if (data) {
-      setItems(data as ClothingItem[]);
-      // Build a map of id -> item for quick lookup by OutfitCard
-      const map: Record<string, ClothingItem> = {};
-      for (const item of data) {
-        map[item.id] = item as ClothingItem;
-      }
-      setItemsMap(map);
+    if (!user) {
+      setLoadingItems(false);
+      return;
     }
-    setLoadingItems(false);
+
+    try {
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from("clothing_items")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (fetchError) {
+        console.error("Error fetching wardrobe items:", fetchError);
+        setError("Failed to load your wardrobe. Please refresh the page.");
+      } else if (data) {
+        setItems(data as ClothingItem[]);
+        // Build a map of id -> item for quick lookup by OutfitCard
+        const map: Record<string, ClothingItem> = {};
+        for (const item of data) {
+          map[item.id] = item as ClothingItem;
+        }
+        setItemsMap(map);
+        console.log(`Loaded ${data.length} wardrobe items`);
+      }
+    } catch (err) {
+      console.error("Exception fetching wardrobe items:", err);
+      setError("Failed to load your wardrobe. Please refresh the page.");
+    } finally {
+      setLoadingItems(false);
+    }
   }, [user]);
 
   useEffect(() => {
+    console.log(`[OutfitPage] Component mounted. Auth loading: ${authLoading}, User: ${user?.id ?? 'null'}`);
     fetchItems();
-  }, [fetchItems]);
+  }, [fetchItems, authLoading, user]);
+
+  // Debug: Log when items change
+  useEffect(() => {
+    console.log(`[OutfitPage] Items updated: ${items.length} items, loadingItems: ${loadingItems}`);
+  }, [items, loadingItems]);
 
   // Call the /api/outfit route which uses Claude AI
   const handleGenerate = async () => {
-    if (items.length < 2) return;
+    console.log(`[OutfitPage] handleGenerate called. Items: ${items.length}, User: ${user?.id}`);
+
+    if (items.length < 2) {
+      console.warn(`[OutfitPage] Not enough items: ${items.length}`);
+      setError(`You need at least 2 items in your wardrobe. You currently have ${items.length}.`);
+      return;
+    }
 
     setGenerating(true);
     setError(null);
     setShowResults(false);
 
     try {
+      console.log(`[OutfitPage] Calling /api/outfit with ${items.length} items, activity: ${activity}`);
+
       const res = await fetch("/api/outfit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items, activity, weather, vibeNotes }),
       });
+
+      console.log(`[OutfitPage] API response status: ${res.status}`);
 
       if (!res.ok) {
         const { error: apiError } = (await res.json()) as { error: string };
@@ -93,10 +123,13 @@ export default function OutfitPage() {
         wardrobe_tip?: string | null;
       };
 
+      console.log(`[OutfitPage] Received ${data.outfits.length} outfit recommendations`);
+
       setOutfits(data.outfits);
       setWardrobeTip(data.wardrobe_tip ?? null);
       setShowResults(true);
     } catch (err) {
+      console.error("[OutfitPage] Error generating outfits:", err);
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setGenerating(false);
@@ -163,16 +196,18 @@ export default function OutfitPage() {
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={loadingItems || items.length < 2 || generating}
+                disabled={authLoading || loadingItems || items.length < 2 || generating}
                 className="mt-4 w-full rounded-lg bg-accent px-4 py-3 font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
               >
-                {loadingItems
-                  ? "Loading wardrobe..."
-                  : items.length < 2
-                    ? "Add at least 2 items to your wardrobe first"
-                    : generating
-                      ? "Generating outfits…"
-                      : "Generate Outfits"}
+                {authLoading
+                  ? "Loading user..."
+                  : loadingItems
+                    ? "Loading wardrobe..."
+                    : items.length < 2
+                      ? `Need at least 2 items (you have ${items.length})`
+                      : generating
+                        ? "Generating outfits…"
+                        : "Generate Outfits"}
               </button>
 
               {/* Error message */}
