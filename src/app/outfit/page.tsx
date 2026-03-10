@@ -26,7 +26,7 @@ const activities = [
 ];
 
 export default function OutfitPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activity, setActivity] = useState("casual_hangout");
   const [vibeNotes, setVibeNotes] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -40,37 +40,64 @@ export default function OutfitPage() {
   const [outfits, setOutfits] = useState<OutfitRecommendation[]>([]);
   const [wardrobeTip, setWardrobeTip] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch the user's wardrobe items
   const fetchItems = useCallback(async () => {
-    if (!user) return;
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("clothing_items")
-      .select("*")
-      .eq("user_id", user.id);
-
-    if (data) {
-      setItems(data as ClothingItem[]);
-      // Build a map of id -> item for quick lookup by OutfitCard
-      const map: Record<string, ClothingItem> = {};
-      for (const item of data) {
-        map[item.id] = item as ClothingItem;
-      }
-      setItemsMap(map);
+    if (!user) {
+      setLoadingItems(false);
+      return;
     }
-    setLoadingItems(false);
+
+    try {
+      const supabase = createClient();
+      const { data, error: fetchError } = await supabase
+        .from("clothing_items")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (fetchError) {
+        console.error("Error fetching wardrobe items:", fetchError);
+        setError("Failed to load your wardrobe. Please refresh the page.");
+      } else if (data) {
+        setItems(data as ClothingItem[]);
+        // Build a map of id -> item for quick lookup by OutfitCard
+        const map: Record<string, ClothingItem> = {};
+        for (const item of data) {
+          map[item.id] = item as ClothingItem;
+        }
+        setItemsMap(map);
+        console.log(`Loaded ${data.length} wardrobe items`);
+      }
+    } catch (err) {
+      console.error("Exception fetching wardrobe items:", err);
+      setError("Failed to load your wardrobe. Please refresh the page.");
+    } finally {
+      setLoadingItems(false);
+    }
   }, [user]);
 
   useEffect(() => {
+    console.log(`[OutfitPage] Component mounted. Auth loading: ${authLoading}, User: ${user?.id ?? 'null'}`);
     fetchItems();
-  }, [fetchItems]);
+  }, [fetchItems, authLoading, user]);
+
+  // Debug: Log when items change
+  useEffect(() => {
+    console.log(`[OutfitPage] Items updated: ${items.length} items, loadingItems: ${loadingItems}`);
+  }, [items, loadingItems]);
 
   // Placeholder generate function — will call Claude API in Phase 5
   const handleGenerate = () => {
+    console.log(`[OutfitPage] handleGenerate called. Items: ${items.length}, User: ${user?.id}`);
+
     if (items.length < 2) {
+      console.warn(`[OutfitPage] Not enough items: ${items.length}`);
+      setError(`You need at least 2 items in your wardrobe. You currently have ${items.length}.`);
       return; // Not enough items
     }
+
+    setError(null);
 
     // For now, generate a simple placeholder recommendation
     // using the user's actual items
@@ -157,15 +184,24 @@ export default function OutfitPage() {
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={loadingItems || items.length < 2}
+              disabled={authLoading || loadingItems || items.length < 2}
               className="mt-4 w-full rounded-lg bg-accent px-4 py-3 font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
             >
-              {loadingItems
-                ? "Loading wardrobe..."
-                : items.length < 2
-                  ? "Add at least 2 items to your wardrobe first"
-                  : "Generate Outfits"}
+              {authLoading
+                ? "Loading user..."
+                : loadingItems
+                  ? "Loading wardrobe..."
+                  : items.length < 2
+                    ? `Need at least 2 items (you have ${items.length})`
+                    : "Generate Outfits"}
             </button>
+
+            {/* Error message */}
+            {error && (
+              <p className="mt-2 rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
+                {error}
+              </p>
+            )}
           </div>
         </div>
 
