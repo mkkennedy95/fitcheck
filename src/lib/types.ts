@@ -1,9 +1,9 @@
 // TypeScript types for the FitCheck app
 // These define the "shape" of our data — what fields each object has
 
-export type Category = "tops" | "bottoms" | "shoes" | "outerwear" | "accessories";
+export type Category = "tops" | "bottoms" | "shoes" | "outerwear" | "accessories" | "pieces";
 
-export type Formality = "casual" | "smart_casual" | "business_casual" | "formal";
+export type Formality = "casual" | "smart_casual" | "business_casual" | "formal" | "gym";
 
 export type Season = "spring" | "summer" | "fall" | "winter" | "all-season";
 
@@ -24,6 +24,7 @@ export interface ClothingItem {
   color: string;
   formality: Formality;
   seasons: Season[];
+  fit_rating?: number; // 1-5 scale for quality/fit
   image_url: string | null;
   cloudinary_public_id: string | null;
   created_at: string;

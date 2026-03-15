@@ -24,6 +24,7 @@ const categories: { value: Category; label: string }[] = [
   { value: "shoes", label: "Shoes" },
   { value: "outerwear", label: "Outerwear" },
   { value: "accessories", label: "Accessories" },
+  { value: "pieces", label: "Pieces" },
 ];
 
 const formalityLevels: { value: Formality; label: string }[] = [
@@ -31,6 +32,7 @@ const formalityLevels: { value: Formality; label: string }[] = [
   { value: "smart_casual", label: "Smart Casual" },
   { value: "business_casual", label: "Business Casual" },
   { value: "formal", label: "Formal" },
+  { value: "gym", label: "Gym/Exercise" },
 ];
 
 const seasonOptions: { value: Season; label: string }[] = [
@@ -89,6 +91,7 @@ export default function AddItemPage() {
   const [color, setColor] = useState("Black");
   const [formality, setFormality] = useState<Formality>("casual");
   const [selectedSeasons, setSelectedSeasons] = useState<Season[]>([]);
+  const [fitRating, setFitRating] = useState(3);
 
   // Image state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -154,6 +157,7 @@ export default function AddItemPage() {
           color,
           formality,
           seasons: selectedSeasons,
+          fit_rating: fitRating,
           image_url: imageUrl,
           cloudinary_public_id: cloudinaryPublicId,
         });
@@ -328,7 +332,7 @@ export default function AddItemPage() {
           <label className="mb-2 block text-sm font-medium text-navy">
             Formality Level
           </label>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {formalityLevels.map((level) => (
               <button
                 key={level.value}
@@ -367,6 +371,29 @@ export default function AddItemPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Quality/Fit Rating Slider */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-navy">
+            Quality/Fit Rating
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={fitRating}
+              onChange={(e) => setFitRating(parseInt(e.target.value))}
+              className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-accent"
+            />
+            <span className="min-w-12 text-sm font-medium text-navy">
+              {fitRating}/5
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-gray-medium">
+            How well does this item fit and how good is the quality?
+          </p>
         </div>
 
         {/* Save button */}
