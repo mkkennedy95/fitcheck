@@ -54,7 +54,12 @@ ${weatherText}
 ${vibeNotes ? `User's vibe / style notes: "${vibeNotes}"` : ""}
 
 STYLING PRINCIPLES TO APPLY:
-- Color coordination: Use complementary colors (navy/brown, black/gray, olive/tan). Avoid clashing (black/brown shoes with navy suits, etc.). Neutrals (black, white, gray, navy, beige) are versatile bases.
+- Color coordination (STRICT RULES):
+  * NEVER pair same-color tops and bottoms (e.g., no black top with black bottom, no navy top with navy bottom)
+  * NEVER pair navy with black — these clash despite both being dark
+  * Each outfit should have ONE anchor neutral (black, white, gray, navy, beige, tan) and maximum ONE accent color
+  * Good pairings: navy/brown, black/gray, olive/tan, charcoal/burgundy, white/any color
+  * Avoid clashing: black/brown shoes with navy suits, brown belt with black shoes, etc.
 - Formality matching: All items in an outfit should match formality level. Don't mix formal dress shoes with gym shorts, or business blazers with athletic wear.
 - Occasion appropriateness:
   * Work/Office: Business casual to formal. Button-downs, chinos/dress pants, leather shoes. Blazers add polish.
@@ -98,7 +103,7 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
 }`;
 
     const message = await client.messages.create({
-      model: "claude-opus-4-6",
+      model: "claude-sonnet-4-6",
       max_tokens: 1024,
       messages: [{ role: "user", content: prompt }],
     });
@@ -109,8 +114,9 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
       throw new Error("Unexpected response type from Claude");
     }
 
-    // Parse Claude's JSON response
-    const parsed = JSON.parse(content.text) as RecommendationResponse;
+    console.log('RAW RESPONSE:', content.text);
+    const cleaned = content.text.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+    const parsed = JSON.parse(cleaned) as RecommendationResponse;
 
     // Validate that all returned item IDs actually exist in the wardrobe
     const validIds = new Set(items.map((i) => i.id));
