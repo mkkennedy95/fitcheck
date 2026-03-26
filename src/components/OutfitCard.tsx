@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ClothingItem, OutfitRecommendation } from "@/lib/types";
 
 // Confidence badge colors
@@ -11,13 +12,31 @@ interface OutfitCardProps {
   outfit: OutfitRecommendation;
   // Map of item IDs to their full data so we can display images/names
   itemsMap: Record<string, ClothingItem>;
+  // Callback when user saves this outfit
+  onSave: (outfitItems: ClothingItem[]) => Promise<void>;
 }
 
-export default function OutfitCard({ outfit, itemsMap }: OutfitCardProps) {
+export default function OutfitCard({ outfit, itemsMap, onSave }: OutfitCardProps) {
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   // Look up the actual clothing items for this outfit
   const outfitItems = outfit.items
     .map((id) => itemsMap[id])
     .filter(Boolean);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await onSave(outfitItems);
+      setSaved(true);
+    } catch (error) {
+      console.error("Failed to save outfit:", error);
+      // Don't change saved state on error - keep button enabled
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -64,8 +83,18 @@ export default function OutfitCard({ outfit, itemsMap }: OutfitCardProps) {
 
       {/* Save button */}
       <div className="px-4 pb-3">
-        <button className="w-full rounded-lg border border-accent px-4 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent hover:text-white">
-          Save This Outfit
+        <button
+          onClick={handleSave}
+          disabled={saving || saved}
+          className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            saved
+              ? "bg-success text-white cursor-not-allowed"
+              : saving
+                ? "border border-accent text-accent cursor-wait opacity-75"
+                : "border border-accent text-accent hover:bg-accent hover:text-white"
+          }`}
+        >
+          {saving ? "Saving..." : saved ? "Saved ✓" : "Save This Outfit"}
         </button>
       </div>
     </div>

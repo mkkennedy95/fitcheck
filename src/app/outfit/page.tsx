@@ -136,6 +136,35 @@ export default function OutfitPage() {
     }
   };
 
+  // Save an outfit to the database
+  const handleSaveOutfit = async (
+    outfit: OutfitRecommendation,
+    outfitItems: ClothingItem[]
+  ) => {
+    try {
+      const res = await fetch("/api/outfits/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          outfit_name: outfit.name,
+          outfit_description: outfit.why,
+          items: outfitItems,
+          weather_context: weather,
+        }),
+      });
+
+      if (!res.ok) {
+        const { error: apiError } = (await res.json()) as { error: string };
+        throw new Error(apiError ?? `Failed to save outfit (${res.status})`);
+      }
+
+      console.log(`[OutfitPage] Outfit "${outfit.name}" saved successfully`);
+    } catch (err) {
+      console.error("[OutfitPage] Error saving outfit:", err);
+      throw err; // Re-throw so OutfitCard can handle it
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="space-y-6">
@@ -237,7 +266,12 @@ export default function OutfitPage() {
                   Your Outfit Picks
                 </h2>
                 {outfits.map((outfit, index) => (
-                  <OutfitCard key={index} outfit={outfit} itemsMap={itemsMap} />
+                  <OutfitCard
+                    key={index}
+                    outfit={outfit}
+                    itemsMap={itemsMap}
+                    onSave={(outfitItems) => handleSaveOutfit(outfit, outfitItems)}
+                  />
                 ))}
                 {/* Wardrobe tip */}
                 {wardrobeTip && (
