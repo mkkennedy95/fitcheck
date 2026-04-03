@@ -14,6 +14,7 @@ export default function Home() {
   const { user } = useAuth();
   const [totalItems, setTotalItems] = useState(0);
   const [categoryCount, setCategoryCount] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Fetch real stats from Supabase
@@ -22,19 +23,21 @@ export default function Home() {
 
     const fetchStats = async () => {
       const supabase = createClient();
-      const { data } = await supabase
-        .from("clothing_items")
-        .select("category")
-        .eq("user_id", user.id);
 
-      if (data) {
-        setTotalItems(data.length);
-        // Count unique categories the user has items in
+      const [wardrobeRes, savedRes] = await Promise.all([
+        supabase.from("clothing_items").select("category").eq("user_id", user.id),
+        supabase.from("saved_outfits").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+
+      if (wardrobeRes.data) {
+        setTotalItems(wardrobeRes.data.length);
         const uniqueCategories = new Set(
-          data.map((item: Pick<ClothingItem, "category">) => item.category)
+          wardrobeRes.data.map((item: Pick<ClothingItem, "category">) => item.category)
         );
         setCategoryCount(uniqueCategories.size);
       }
+
+      setSavedCount(savedRes.count ?? 0);
       setLoading(false);
     };
 
@@ -73,15 +76,18 @@ export default function Home() {
               Tops, bottoms, shoes, outerwear, accessories
             </p>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium text-gray-medium">
-              Saved Outfits
+          <Link
+            href="/saved-outfits"
+            className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-colors hover:border-accent hover:bg-accent/5"
+          >
+            <p className="text-sm font-medium text-gray-medium">Saved Outfits</p>
+            <p className="mt-1 text-3xl font-bold text-navy">
+              {loading ? "—" : savedCount}
             </p>
-            <p className="mt-1 text-3xl font-bold text-navy">0</p>
             <p className="mt-1 text-xs text-gray-medium">
               AI-recommended combos you loved
             </p>
-          </div>
+          </Link>
         </div>
 
         {/* CTA section */}
