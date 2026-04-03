@@ -145,7 +145,7 @@ export default function OutfitPage() {
         outfit_name: outfit.name,
         outfit_description: outfit.why,
         items: outfitItems.map((item) => item.id),
-        weather_context: weather ? `${weather.temp}°F, ${weather.condition}` : null,
+        weather_context: weather ? `${weather.temperature}°F, ${weather.conditions}` : null,
       }),
     });
     if (!response.ok) throw new Error("Failed to save outfit");
