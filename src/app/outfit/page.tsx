@@ -12,8 +12,10 @@ import { createClient } from "@/lib/supabase";
 import type {
   ClothingItem,
   OutfitRecommendation,
+  StylistId,
   WeatherData,
 } from "@/lib/types";
+import { STYLISTS } from "@/lib/stylists";
 
 // Activity options for the dropdown
 const activities = [
@@ -30,6 +32,7 @@ export default function OutfitPage() {
   const [activity, setActivity] = useState("casual_hangout");
   const [vibeNotes, setVibeNotes] = useState("");
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [stylistId, setStylistId] = useState<StylistId>("editor");
 
   // Real wardrobe items from Supabase
   const [items, setItems] = useState<ClothingItem[]>([]);
@@ -108,7 +111,7 @@ export default function OutfitPage() {
       const res = await fetch("/api/outfit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, activity, weather, vibeNotes }),
+        body: JSON.stringify({ items, activity, weather, vibeNotes, stylistId }),
       });
 
       console.log(`[OutfitPage] API response status: ${res.status}`);
@@ -181,6 +184,29 @@ export default function OutfitPage() {
           <div className="space-y-6">
             {/* Real weather widget */}
             <WeatherWidget onWeatherLoaded={setWeather} />
+
+            {/* Stylist selector */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <label className="mb-3 block text-sm font-medium text-navy">
+                Choose your stylist
+              </label>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {STYLISTS.map((stylist) => (
+                  <button
+                    key={stylist.id}
+                    onClick={() => setStylistId(stylist.id)}
+                    className={`rounded-lg border-2 p-3 text-left transition-all ${
+                      stylistId === stylist.id
+                        ? "border-accent bg-accent/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-navy">{stylist.name}</p>
+                    <p className="mt-1 text-xs text-gray-dark">{stylist.tagline}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Activity selector */}
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

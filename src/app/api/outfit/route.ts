@@ -1,12 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
-import type { ClothingItem, RecommendationResponse } from "@/lib/types";
+import type { ClothingItem, RecommendationResponse, StylistId } from "@/lib/types";
+import { STYLISTS } from "@/lib/stylists";
 
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, activity, weather, vibeNotes } = (await req.json()) as {
+    const { items, activity, weather, vibeNotes, stylistId } = (await req.json()) as {
       items: ClothingItem[];
       activity: string;
       weather: {
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
         city: string;
       } | null;
       vibeNotes: string;
+      stylistId?: string;
     };
 
     if (!items || items.length < 2) {
@@ -47,11 +49,17 @@ export async function POST(req: NextRequest) {
       special_event: "Special Event",
     };
 
+    // Lookup the selected stylist or default to "editor"
+    const selectedStylistId = (stylistId as StylistId) || "editor";
+    const stylist = STYLISTS.find(s => s.id === selectedStylistId) ?? STYLISTS.find(s => s.id === "editor")!;
+
     const prompt = `You are an expert men's stylist with deep knowledge of fashion principles, color theory, and occasion-appropriate dressing. The user needs outfit recommendations for: ${activityLabel[activity] ?? activity}.
 
 ${weatherText}
 
 ${vibeNotes ? `User's vibe / style notes: "${vibeNotes}"` : ""}
+
+${stylist.prompt}
 
 STYLING PRINCIPLES TO APPLY:
 - Color coordination (STRICT RULES):

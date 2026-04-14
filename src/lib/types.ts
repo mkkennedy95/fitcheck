@@ -15,6 +15,15 @@ export type Activity =
   | "outdoor_active"
   | "special_event";
 
+export type StylistId = "architect" | "editor" | "director" | "traveler";
+
+export interface Stylist {
+  id: StylistId;
+  name: string;
+  tagline: string;
+  prompt: string;
+}
+
 // A single clothing item in the user's wardrobe
 export interface ClothingItem {
   id: string;
