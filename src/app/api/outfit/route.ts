@@ -1,4 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import type { ClothingItem, RecommendationResponse, StylistId } from "@/lib/types";
 import { STYLISTS } from "@/lib/stylists";
@@ -7,6 +9,93 @@ const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
   try {
+    // Create server-side Supabase client with cookies
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    );
+
+    // Get authenticated user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in." },
+        { status: 401 }
+      );
+    }
+
+    // Check generation limits
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("generation_count, generation_reset_at")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.error("[/api/outfit] Error fetching profile:", profileError);
+      return NextResponse.json(
+        { error: "Failed to check generation limits." },
+        { status: 500 }
+      );
+    }
+
+    let currentCount = profile.generation_count || 0;
+    const resetAt = profile.generation_reset_at ? new Date(profile.generation_reset_at) : null;
+    const now = new Date();
+
+    // Reset count if reset date is in the past
+    if (!resetAt || resetAt < now) {
+      const newResetAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          generation_count: 0,
+          generation_reset_at: newResetAt.toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (updateError) {
+        console.error("[/api/outfit] Error resetting generation count:", updateError);
+      } else {
+        currentCount = 0;
+      }
+    }
+
+    // Check if user has reached the limit
+    if (currentCount >= 10) {
+      return NextResponse.json(
+        {
+          error: "Generation limit reached",
+          generationCount: currentCount,
+          generationLimit: 10,
+        },
+        { status: 429 }
+      );
+    }
+
     const { items, activity, weather, vibeNotes, stylistId } = (await req.json()) as {
       items: ClothingItem[];
       activity: string;
@@ -138,7 +227,21 @@ Respond with valid JSON only — no markdown fences, no explanation outside JSON
       wardrobe_tip: parsed.wardrobe_tip ?? undefined,
     };
 
-    return NextResponse.json(sanitized);
+    // Increment generation count
+    const { error: incrementError } = await supabase
+      .from("profiles")
+      .update({ generation_count: currentCount + 1 })
+      .eq("id", user.id);
+
+    if (incrementError) {
+      console.error("[/api/outfit] Error incrementing generation count:", incrementError);
+    }
+
+    return NextResponse.json({
+      ...sanitized,
+      generationCount: currentCount + 1,
+      generationLimit: 10,
+    });
   } catch (err) {
     console.error("[/api/outfit] Error:", err);
     const message = err instanceof Error ? err.message : "Unknown error";
